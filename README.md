@@ -4,6 +4,8 @@ The **Aura** device will alert an user from an epilepsy seizure within few minut
 
 # Quick Start #
 
+ - install python 3, pip and virtualenv
+
  - clone the repository
 
 ```
