@@ -4,15 +4,17 @@ The **Aura** device will alert an user from an epilepsy seizure within few minut
 
 # Quick Start #
 
+ - install python 3, pip and virtualenv
+
  - clone the repository
 
 ```
         git clone https://github.com/clecoued/Aura_data_analysis_platform.git
 ```
- - create a new python [virtualenv](http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) in the repository
+ - create a new python [virtualenv](http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) in the repository (the -p is not necessary if python 3 is your default version)
 ```
         cd Aura_data_analysis_platform
-        virtualenv myProject
+        virtualenv myProject -p <pathToPython3>
 ```
  - install python package dependencies
 ```
