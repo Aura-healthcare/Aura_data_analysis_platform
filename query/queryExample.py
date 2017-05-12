@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import dateutil.parser
 
 
 # Get user credentials 
-userConfig = ConfigParser.ConfigParser()
+userConfig = configparser.ConfigParser()
 userConfig.read('credentials.cfg')
 
 credential_section = "Credentials"
@@ -16,7 +16,7 @@ try:
 	secret_acces_key = userConfig.get(credential_section, "secret_acces_key")
 	aws_region = userConfig.get(credential_section, "aws_region")
 except Exception:
-	print "Please set up valid credentials \n"
+	print("Please set up valid credentials \n")
 
 # Connect to NoSql DynamoDB database 
 dynamodb = boto3.resource(
@@ -30,9 +30,9 @@ userTable = dynamodb.Table('Users')
 response = userTable.scan(Select="SPECIFIC_ATTRIBUTES", AttributesToGet=["UUID"])
 
 numberOfUsers = response['Count']
-print "Number of users in db: " + str(numberOfUsers)
+print("Number of users in db: " + str(numberOfUsers))
 users = response['Items']
-print users
+print(users)
 
 # Collect Physiological Raw Data  
 physioSignalTable = dynamodb.Table('PhysioSignal')
@@ -45,7 +45,7 @@ response = physioSignalTable.query(
 
 
 numberOfDataSamples = response['Count']
-print "Number of data samples in query: " + str(numberOfDataSamples)
+print("Number of data samples in query: " + str(numberOfDataSamples))
 physioDataSamples = response['Items']
 
 # Sort the physiological data by date
