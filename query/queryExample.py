@@ -4,25 +4,32 @@ from boto3.dynamodb.conditions import Key, Attr
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import dateutil.parser
-
+from influxdb import InfluxDBClient
 
 # Get user credentials 
 userConfig = configparser.ConfigParser()
 userConfig.read('credentials.cfg')
 
-credential_section = "Credentials"
+dynamoDBCredentialsSection = "DynamoDB Credentials"
+influxDBCredentialsSection = "InfluxDB Credentials"
 try:
-	acces_key_id = userConfig.get(credential_section, "acces_key_id")
-	secret_acces_key = userConfig.get(credential_section, "secret_acces_key")
-	aws_region = userConfig.get(credential_section, "aws_region")
+	dynamoDB_acces_key_id = userConfig.get(dynamoDBCredentialsSection, "acces_key_id")
+	dynamoDB_secret_acces_key = userConfig.get(dynamoDBCredentialsSection, "secret_acces_key")
+	aws_region = userConfig.get(dynamoDBCredentialsSection, "aws_region")
+
+	influxDB_url = userConfig.get(influxDBCredentialsSection, "database_url")
+	influxDB_port = userConfig.get(influxDBCredentialsSection, "database_port")
+	influxDB_user = userConfig.get(influxDBCredentialsSection, "username")
+	influxDB_password = userConfig.get(influxDBCredentialsSection, "password")
 except Exception:
 	print("Please set up valid credentials \n")
+
 
 # Connect to NoSql DynamoDB database 
 dynamodb = boto3.resource(
 						 'dynamodb',
-                          aws_access_key_id=acces_key_id,
-                          aws_secret_access_key=secret_acces_key,
+                          aws_access_key_id=dynamoDB_acces_key_id,
+                          aws_secret_access_key=dynamoDB_secret_acces_key,
                           region_name=aws_region)
 
 # Get Every Users UUID 
@@ -34,31 +41,33 @@ print("Number of users in db: " + str(numberOfUsers))
 users = response['Items']
 print(users)
 
-# Collect Physiological Raw Data  
-physioSignalTable = dynamodb.Table('PhysioSignal')
 
-# We filter on a specific user and a specific day 
-response = physioSignalTable.query(
-	IndexName='User-index',
-	KeyConditionExpression=Key('User').eq(users[1]['UUID'])
-	)
+# Connect to InfluxDB database
+InfluxDBPhysioSignalDBName = "physio_signal"
+InfluxDBSensitiveEventDBName = "sensitive_event"
+influxDBPhysioSignalClient = InfluxDBClient(influxDB_url, influxDB_port, influxDB_user, influxDB_password, InfluxDBPhysioSignalDBName)
 
+# Get physiological data for a specific user
+selectedUser = users[0]['UUID']
+physioSignalQuery = 'select * from heart where "user" = \'' + selectedUser + '\';'
+print("Querying data: " + physioSignalQuery + " on User" + selectedUser)
+response = influxDBPhysioSignalClient.query(physioSignalQuery)
 
-numberOfDataSamples = response['Count']
+physioDataSamples = list(response.get_points(measurement='heart'))
+numberOfDataSamples = len(physioDataSamples)
 print("Number of data samples in query: " + str(numberOfDataSamples))
-physioDataSamples = response['Items']
 
 # Sort the physiological data by date
-sortedPhysioDataSamples = sorted(physioDataSamples, key=lambda k: k['Timestamp']) 
+sortedPhysioDataSamples = sorted(physioDataSamples, key=lambda k: k['time'])
 
 # format the data to be displayed as a xy plot (x-axis = date, y-axis= RrInterval)
 x = []
 y = []
 for dataSample in sortedPhysioDataSamples:
-	if dataSample["Type"] == "RrInterval":
+	if dataSample["type"] == "RrInterval":
 		# convert iso 8601 String date to datetime python object
-		x.append( dateutil.parser.parse(dataSample['Timestamp']) )
-		y.append( dataSample['RrInterval'])
+		x.append( dateutil.parser.parse(dataSample['time']) )
+		y.append( dataSample['rr_interval'])
 
 # format date label 
 xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
