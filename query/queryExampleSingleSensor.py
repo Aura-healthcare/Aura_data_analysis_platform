@@ -48,7 +48,7 @@ InfluxDBSensitiveEventDBName = "sensitive_event"
 influxDBPhysioSignalClient = InfluxDBClient(influxDB_url, influxDB_port, influxDB_user, influxDB_password, InfluxDBPhysioSignalDBName)
 
 # Get physiological data for a specific user
-selectedUser = users[0]['UUID']
+selectedUser = users[8]['UUID']
 physioSignalQuery = 'select * from heart where "user" = \'' + selectedUser + '\';'
 print("Querying data: " + physioSignalQuery + " on User" + selectedUser)
 response = influxDBPhysioSignalClient.query(physioSignalQuery)
@@ -59,6 +59,9 @@ print("Number of data samples in query: " + str(numberOfDataSamples))
 
 # Sort the physiological data by date
 sortedPhysioDataSamples = sorted(physioDataSamples, key=lambda k: k['time'])
+import json
+with open('PartialNight-01-08.dat', 'w') as outfile:
+    json.dump(sortedPhysioDataSamples, outfile)
 
 # format the data to be displayed as a xy plot (x-axis = date, y-axis= RrInterval)
 x = []
@@ -66,8 +69,9 @@ y = []
 for dataSample in sortedPhysioDataSamples:
 	if dataSample["type"] == "RrInterval":
 		# convert iso 8601 String date to datetime python object
-		x.append( dateutil.parser.parse(dataSample['time']) )
-		y.append( dataSample['rr_interval'])
+	 	if dataSample['rr_interval'] < 2000 and dataSample['rr_interval'] > 500:
+		    x.append( dateutil.parser.parse(dataSample['time']) )
+		    y.append( dataSample['rr_interval'])
 
 # format date label 
 xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
