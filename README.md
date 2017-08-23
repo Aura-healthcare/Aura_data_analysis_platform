@@ -31,41 +31,54 @@ The **Aura** device will alert an user from an epilepsy seizure within few minut
 # API #
 ## Database
 
-Data are stored in a DynamoDB (NoSql) database on a Cloud. 
+Data are stored in a two differents databases on Cloud in order to split user personnal information from physiological data.
+User physiological data remain completely anonymous and data scientists can only access to user UUID information.
+
+### User data
+User data are stored on a **Amazon DynamoDB**(NoSql) database.
+
 We acces it using python Amazon library [boto3](http://boto3.readthedocs.io/en/latest/reference/services/dynamodb.html) 
 
-The database is divided into 2 tables:
+The database is described as below:
 
-- **Users** *stores the users list under format:*
+A single table - **Users** - *storing the users list under format:*
+
 ```javascript
 // User sample
 {
     "UUID": "0399a758-da41-4fa5-aa30-625bc19c92ac" //(String) User UUID 
 }
 ```
-- **PhysioSignal** *stores the data samples under format:*
-```javascript
-// Generic Data sample
-{
-    "UUID": "eee9f933-701a-454f-b713-aa7755b3b6a3", //(String) Data sample UUID
-    "Timestamp": "2017-05-05T11:59:34.365", //(String) Data sample timestamp stored following iso8601 format
-    "User": "", //(String) User UUID on which has been recorded the data sample
-    "Type": "RrInterval", //(String) Data sample type - RrInterval, ElectroDermalActivity, Temperature ...
-}
-```
 
-We store differents physiological parameters:
+### Physiological signal data 
+Physiological signal data are stored on a **InfluxDB** (Times Series Database) database.
 
-- Cardiac R-R interval
-- Electro dermal activity *(soon documented)*
-- Skin external temperature *(soon documented)*
+We acces it through:
+
+  - REST API - see [InfluxDB documentation](https://docs.influxdata.com/influxdb/v1.3/guides/querying_data/)
+  - [Python InfluxDB client library](https://github.com/influxdata/influxdb-python) wrapping the requests
 
 
-```javascript
-// Specific R-R interval data sample field
-{
-    "RrInterval": "850" //(Integer) cardiac rr interval value in milliseconds 
-}
-```
+We store informations in a single table - ** physio_signal ** -
+
+We currently save three differents **measurements**:
+
+  * Heart rate - **heart** -
+  * Skin Temperature - **temperature** -
+  * Electro Dermal Activity - **electro_dermal_activity** -
+
+Each measurement is tagged with following fields:
+
+|   TAG         | Description            |
+|:------------: |:-------------:         |
+| uuid          | (String) sample UUID   |
+| user          | (String) user UUID *see User data section*      |
+| type          | (String) data type */ RrInterval / SkinTemperature / ElectroDermalActivity /*      |
+| device_adress | (String) device adress UUID           |
+| time          | date and timestamp in milleseconds             |
+
+
+### Data Viz
+![](documentation/multiSensorsDataViz.png)
 
 
