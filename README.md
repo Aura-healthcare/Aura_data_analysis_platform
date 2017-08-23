@@ -63,14 +63,17 @@ We store informations in a single table - ** physio_signal ** -
 
 We currently save three differents **measurements**:
 
-  * Heart rate - **heart** -
-  * Skin Temperature - **temperature** -
-  * Electro Dermal Activity - **electro_dermal_activity** -
+|   Measurement            | Measurement name in DB |  Recorded data                 sample| Recorded data description            |
+|:------------------------:|:----------------:|:-----------------------------:|:-------------------------------------|
+| Heart Rate               | **heart**        |**rr_interval**                | (Short)RR-interval in milliseconds |
+| Skin Temperature         | **temperature**  |**skin_temperature**           | (Float) Skin temperature in degree Celsius with a precision 0.01|
+| Electro Dermal Activity  | **electro_dermal_activity** |**output_sensor_frequency**   |  (Integer) Output sensor frequency in Hz   |
+|  | |**electro_dermal_activity**   |  (Integer) Electro dermal activity in Ohm   |
 
-Each measurement is tagged with following fields:
+Each measurement is tagged with following fields and queries can be filtered along theses tags:
 
 |   TAG         | Description            |
-|:------------: |:-------------:         |
+|:------------: |:-----------------------|
 | uuid          | (String) sample UUID   |
 | user          | (String) user UUID *see User data section*      |
 | type          | (String) data type */ RrInterval / SkinTemperature / ElectroDermalActivity /*      |
