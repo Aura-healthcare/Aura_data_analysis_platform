@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: hrv-aura
+Version: 0.0.1
+Summary: a package to calculate features from Rr Interval for HRV analyses
+Home-page: https://github.com/Aura-healthcare/Aura_data_analysis_platform
+Author: Robin Champseix
+Author-email: rchampseix@octo.com
+License: UNKNOWN
+Description: Description of the package:
+        TO DO
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
