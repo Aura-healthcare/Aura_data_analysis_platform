@@ -5,4 +5,4 @@ lib/
 local/
 pip-selfcheck.json
 query/credentials.cfg
-.DS_Store
+**/.DS_Store
