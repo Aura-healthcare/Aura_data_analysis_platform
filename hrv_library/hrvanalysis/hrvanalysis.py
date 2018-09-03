@@ -3,7 +3,122 @@ import nolds
 from scipy import interpolate
 from scipy import signal
 
+# ----------------- CLEAN OUTLIER / ECTOPIC BEATS ----------------- #
+
+# TO DO ...
+
+def clean_outlier_v1(RrIntervals, method="Malik", custom_rule=None):
+    """
+    RR intervals differing by more than the removing_rule from the one
+    proceeding it are removed.
+
+    Arguments
+    ---------
+    RrIntervals - list of Rr Intervals
+    method - method to use to clean outlier. Malik, Kamath, Karlsson or Custom
+    custom_rule - percentage criteria of difference with previous Rr
+    Interval at which we consider that it is abnormal
+
+    Returns
+    ---------
+    NNIntervals - list of NN Interval
+
+    """
+
+    RrIntervals = np.array(RrIntervals)
+    # RrIntervals = np.where(RrInterval > 2000, np.nan, RrInterval) # rri 2000 --> bpm 30
+    # RrIntervals = np.where(RrInterval <  300, np.nan, RrInterval) # rri 300 --> bpm 200
+
+    # set first element in list
+    NNIntervals = [RrIntervals[0]]
+    outlier_count = 0
+    previous_outlier = False
+
+    """
+        if method == "Karlsson":
+            if i == len(RrIntervals)-2:
+                break
+            mean_prev_next_rri = (RrInterval + RrIntervals[i + 2]) / 2
+            if abs(mean_prev_next_rri - RrIntervals[i+1]) < 0.2 * mean_prev_next_rri:
+                NNIntervals.append(RrIntervals[i+1])
+            else:
+                NNIntervals.append(np.nan)
+                outlier_count += 1
+                previous_outlier = True
+        else:
+    """
+
+    if method == "mean_last9":
+        NNIntervals = []
+        for i, RrInterval in enumerate(RrIntervals):
+
+            if i < 9:
+                NNIntervals.append(RrInterval)
+                continue
+
+            mean_last_9_elt = np.nanmean(NNIntervals[-9:])
+            if abs(mean_last_9_elt - RrInterval) < 0.2 * mean_last_9_elt:
+                NNIntervals.append(RrInterval)
+            else:
+                print(RrInterval)
+                NNIntervals.append(np.nan)
+                outlier_count += 1
+                # previous_outlier = True
+    else:
+        for i, RrInterval in enumerate(RrIntervals[:-1]):
+
+            if previous_outlier:
+                NNIntervals.append(RrIntervals[i + 1])
+                previous_outlier = False
+                continue
+
+            # TO DO pour v2 ... Check si plusieurs outliers consécutifs. Quelle règle appliquer ?
+            # while previous_outlier:
+            #   j += 1
+            #  if is_outlier(RrInterval, RrIntervals[i+1+j]):
+            #     NNIntervals.append(np.nan)
+            #    continue
+            # else:
+            #    previous_outlier = False
+
+            if is_outlier(RrInterval, RrIntervals[i + 1], method=method, custom_rule=custom_rule):
+                NNIntervals.append(RrIntervals[i + 1])
+            else:
+                # A débattre, Comment remplacer les outliers ?
+                NNIntervals.append(np.nan)
+                outlier_count += 1
+                previous_outlier = True
+
+    print("Il y a {} outliers supprimés".format(outlier_count))
+
+    return NNIntervals
+
+
+def is_outlier(RrInterval, next_RrInterval, method="Malik", custom_rule=None):
+    if method == "Malik":
+        return abs(RrInterval - next_RrInterval) <= 0.2 * RrInterval
+    elif method == "Kamath":
+        return 0 <= (next_RrInterval - RrInterval) <= 0.325 * RrInterval or 0 <= (
+                    RrInterval - next_RrInterval) <= 0.245 * RrInterval
+    elif method == "custom":
+        return abs(RrInterval - next_RrInterval) <= custom_rule * RrInterval
+    elif method == "Karlsson":
+        return abs((next_RrInterval + previous_RrInterval) / 2 - RrInterval) > 0.2 * (next_RrInterval +
+                                                                                      previous_RrInterval) / 2
+    else:
+        raise ValueError("Not a valid method. Please choose Malik or Kamath")
+
+
+def test_sample(NnIntervals, outlier_count):
+    if outlier_count / len(NnIntervals) > 0.2:
+        print("Too much outlier for analyses !")
+    if len(NnIntervals) < 240:
+        print("Not enough Heart beat for Nyquist criteria !")
+    return None
+
+
 # ----------------- TIME DOMAIN FEATURES ----------------- #
+
 
 def get_time_domain_features(NNIntervals):
     """
@@ -65,7 +180,7 @@ def get_time_domain_features(NNIntervals):
     L = len(NNIntervals)
     
     meanNN = np.mean(NNIntervals)
-    SDNN = np.std(NNIntervals, ddof=1) # ddof = 1 : estimateur non biaisé => divise std par n-1
+    SDNN = np.std(NNIntervals, ddof=1)  # ddof = 1 : estimateur non biaisé => divise std par n-1
     SDSD = np.std(diff_nni)
     RMSSD = np.sqrt(np.mean(diff_nni ** 2))
     medianNN = np.median(NNIntervals)
@@ -78,11 +193,11 @@ def get_time_domain_features(NNIntervals):
     RangeNN = max(NNIntervals) - min(NNIntervals)
     
     # Feature(s) trouvée(s) sur les codes github et non dans la doc
-    #CVSD = RMMSD / meanNN
+    # CVSD = RMMSD / meanNN
     
     # Features non calculables pour short term recordings
-    #SDNN équivaut à SDANN sur 24h et non sur une fenêtre temporelle
-    #cvNN = SDNN / meanNN # Necissite cycle 24h
+    # SDNN équivaut à SDANN sur 24h et non sur une fenêtre temporelle
+    # cvNN = SDNN / meanNN # Necissite cycle 24h
     
     timeDomainFeaturess = {
         'meanNN': meanNN, 
@@ -95,9 +210,9 @@ def get_time_domain_features(NNIntervals):
         'RMSSD' : RMSSD,
         'MedianNN' : medianNN, 
         'RangeNN' : RangeNN
-        #,'CVSD' : CVSD,
-        #'SDNN' : SDNN,
-        #'cvNN' : cvNN
+        # ,'CVSD' : CVSD,
+        # 'SDNN' : SDNN,
+        # 'cvNN' : cvNN
         
     }
     
