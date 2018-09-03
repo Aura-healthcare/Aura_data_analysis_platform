@@ -8,15 +8,35 @@ from astropy.stats import LombScargle
 
 # TO DO ...
 
-
-def clean_outlier_v1(rrintervals, method="Malik", custom_rule=None):
+def clean_outlier(rr_intervals, low_rri=300, high_rri=2000):
     """
-    RR intervals differing by more than the removing_rule from the one
-    proceeding it are removed.
+    Function that replace RR Interval outlier by nan
 
     Arguments
     ---------
-    rrintervals - list of Rr Intervals
+    rr_intervals:
+    low_rri:
+    high_rri:
+
+    Returns
+    ---------
+    rr_intervals_cleaned - list of RR Intervals without outliers
+
+    """
+
+    # rri 2000 => bpm 30 / rri 300 => bpm 200
+    rr_intervals_cleaned = [x if high_rri >= x >= low_rri else np.nan for x in rr_intervals]
+
+    return rr_intervals_cleaned
+
+
+def clean_ectopic_beats(rr_intervals, method="Malik", custom_rule=None):
+    """
+    RR intervals differing by more than the removing_rule from the one proceeding it are removed.
+
+    Arguments
+    ---------
+    rr_intervals - list of Rr Intervals
     method - method to use to clean outlier. Malik, Kamath, Karlsson or Custom
     custom_rule - percentage criteria of difference with previous Rr
     Interval at which we consider that it is abnormal
@@ -27,22 +47,18 @@ def clean_outlier_v1(rrintervals, method="Malik", custom_rule=None):
 
     """
 
-    rrintervals = np.array(rrintervals)
-    # rrintervals = np.where(rrinterval > 2000, np.nan, rrinterval) # rri 2000 --> bpm 30
-    # rrintervals = np.where(rrinterval <  300, np.nan, rrinterval) # rri 300 --> bpm 200
-
     # set first element in list
-    nn_intervals = [rrintervals[0]]
+    nn_intervals = [rr_intervals[0]]
     outlier_count = 0
     previous_outlier = False
 
     """
         if method == "Karlsson":
-            if i == len(rrintervals)-2:
+            if i == len(rr_intervals)-2:
                 break
-            mean_prev_next_rri = (rrinterval + rrintervals[i + 2]) / 2
-            if abs(mean_prev_next_rri - rrintervals[i+1]) < 0.2 * mean_prev_next_rri:
-                nn_intervals.append(rrintervals[i+1])
+            mean_prev_next_rri = (rr_interval + rr_intervals[i + 2]) / 2
+            if abs(mean_prev_next_rri - rr_intervals[i+1]) < 0.2 * mean_prev_next_rri:
+                nn_intervals.append(rr_intervals[i+1])
             else:
                 nn_intervals.append(np.nan)
                 outlier_count += 1
@@ -52,39 +68,39 @@ def clean_outlier_v1(rrintervals, method="Malik", custom_rule=None):
 
     if method == "mean_last9":
         nn_intervals = []
-        for i, rrinterval in enumerate(rrintervals):
+        for i, rr_interval in enumerate(rr_intervals):
 
             if i < 9:
-                nn_intervals.append(rrinterval)
+                nn_intervals.append(rr_interval)
                 continue
 
             mean_last_9_elt = np.nanmean(nn_intervals[-9:])
-            if abs(mean_last_9_elt - rrinterval) < 0.2 * mean_last_9_elt:
-                nn_intervals.append(rrinterval)
+            if abs(mean_last_9_elt - rr_interval) < 0.2 * mean_last_9_elt:
+                nn_intervals.append(rr_interval)
             else:
-                print(rrinterval)
+                print(rr_interval)
                 nn_intervals.append(np.nan)
                 outlier_count += 1
                 # previous_outlier = True
     else:
-        for i, rrinterval in enumerate(rrintervals[:-1]):
+        for i, rr_interval in enumerate(rr_intervals[:-1]):
 
             if previous_outlier:
-                nn_intervals.append(rrintervals[i + 1])
+                nn_intervals.append(rr_intervals[i + 1])
                 previous_outlier = False
                 continue
 
             # TO DO pour v2 ... Check si plusieurs outliers consécutifs. Quelle règle appliquer ?
             # while previous_outlier:
             #   j += 1
-            #  if is_outlier(rrinterval, rrintervals[i+1+j]):
+            #  if is_outlier(rr_interval, rr_intervals[i+1+j]):
             #     nn_intervals.append(np.nan)
             #    continue
             # else:
             #    previous_outlier = False
 
-            if is_outlier(rrinterval, rrintervals[i + 1], method=method, custom_rule=custom_rule):
-                nn_intervals.append(rrintervals[i + 1])
+            if is_outlier(rr_interval, rr_intervals[i + 1], method=method, custom_rule=custom_rule):
+                nn_intervals.append(rr_intervals[i + 1])
             else:
                 # A débattre, Comment remplacer les outliers ?
                 nn_intervals.append(np.nan)
@@ -96,23 +112,23 @@ def clean_outlier_v1(rrintervals, method="Malik", custom_rule=None):
     return nn_intervals
 
 
-def is_outlier(rrinterval, next_rrinterval, method="Malik", custom_rule=None):
+def is_outlier(rr_interval, next_rr_interval, method="Malik", custom_rule=None):
     if method == "Malik":
-        return abs(rrinterval - next_rrinterval) <= 0.2 * rrinterval
+        return abs(rr_interval - next_rr_interval) <= 0.2 * rr_interval
     elif method == "Kamath":
-        return 0 <= (next_rrinterval - rrinterval) <= 0.325 * rrinterval or 0 <= (
-                    rrinterval - next_rrinterval) <= 0.245 * rrinterval
+        return 0 <= (next_rr_interval - rr_interval) <= 0.325 * rr_interval or 0 <= (
+                    rr_interval - next_rr_interval) <= 0.245 * rr_interval
     elif method == "custom":
-        return abs(rrinterval - next_rrinterval) <= custom_rule * rrinterval
+        return abs(rr_interval - next_rr_interval) <= custom_rule * rr_interval
     else:
         raise ValueError("Not a valid method. Please choose Malik or Kamath")
 
 
 def test_sample(nn_intervals, outlier_count):
     if outlier_count / len(nn_intervals) > 0.2:
-        print("Too much outlier for analyses !")
+        print("Too much outlier for analyses ! You should descard the sample")
     if len(nn_intervals) < 240:
-        print("Not enough Heart beat for Nyquist criteria !")
+        print("Not enough Heart beat for Nyquist criteria ! ")
     return None
 
 
