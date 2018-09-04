@@ -8,6 +8,7 @@ from astropy.stats import LombScargle
 
 # TO DO ...
 
+
 def clean_outlier(rr_intervals, low_rri=300, high_rri=2000):
     """
     Function that replace RR Interval outlier by nan
@@ -24,6 +25,7 @@ def clean_outlier(rr_intervals, low_rri=300, high_rri=2000):
 
     """
 
+    # Conversion RrInterval / Heart rate ==> rri (ms) =  1000 / (bpm / 60)
     # rri 2000 => bpm 30 / rri 300 => bpm 200
     rr_intervals_cleaned = [x if high_rri >= x >= low_rri else np.nan for x in rr_intervals]
 
@@ -52,19 +54,18 @@ def clean_ectopic_beats(rr_intervals, method="Malik", custom_rule=None):
     outlier_count = 0
     previous_outlier = False
 
-    """
-        if method == "Karlsson":
-            if i == len(rr_intervals)-2:
-                break
-            mean_prev_next_rri = (rr_interval + rr_intervals[i + 2]) / 2
-            if abs(mean_prev_next_rri - rr_intervals[i+1]) < 0.2 * mean_prev_next_rri:
-                nn_intervals.append(rr_intervals[i+1])
-            else:
-                nn_intervals.append(np.nan)
-                outlier_count += 1
-                previous_outlier = True
-        else:
-    """
+    # if method == "Karlsson":
+    #     if i == len(rr_intervals)-2:
+    #         break
+    #     mean_prev_next_rri = (rr_interval + rr_intervals[i + 2]) / 2
+    #     if abs(mean_prev_next_rri - rr_intervals[i+1]) < 0.2 * mean_prev_next_rri:
+    #         nn_intervals.append(rr_intervals[i+1])
+    #     else:
+    #         nn_intervals.append(np.nan)
+    #         outlier_count += 1
+    #         previous_outlier = True
+    #
+    # return nn_intervals
 
     if method == "mean_last9":
         nn_intervals = []
@@ -266,7 +267,6 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     There are details about each features given in "get_features_from_psd" function.
 
     """
-    
     timestamps = create_time_info(nn_intervals)
 
     # ---------- Interpolation du signal ---------- #
@@ -567,5 +567,6 @@ def get_sampen(nn_intervals):
     - Physiological time-series analysis using approximate entropy and sample entropy,
     JOSHUA S. RICHMAN1, J. RANDALL MOORMAN - 2000
     """
+
     sampen = nolds.sampen(nn_intervals, emb_dim=2)
     return {'sampen': sampen}
