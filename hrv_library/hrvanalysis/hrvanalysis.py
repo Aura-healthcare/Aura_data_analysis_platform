@@ -3,6 +3,7 @@ import nolds
 from scipy import interpolate
 from scipy import signal
 from astropy.stats import LombScargle
+import pandas as pd
 
 # ----------------- ClEAN OUTlIER / ECTOPIC BEATS ----------------- #
 
@@ -30,6 +31,21 @@ def clean_outlier(rr_intervals, low_rri=300, high_rri=2000):
     rr_intervals_cleaned = [x if high_rri >= x >= low_rri else np.nan for x in rr_intervals]
 
     return rr_intervals_cleaned
+
+
+def interpolate_cleaned_outlier(rr_intervals_cleaned):
+    """
+    Arguments
+    ---------
+    rr_intervals_cleaned:
+
+    Returns
+    ---------
+    rr_intervals_interpolated
+    """
+    s = pd.Series(rr_intervals_cleaned)
+    rr_intervals_interpolated = s.interpolate(method="linear")
+    return rr_intervals_interpolated
 
 
 def clean_ectopic_beats(rr_intervals, method="Malik", custom_rule=None):
@@ -117,16 +133,23 @@ def is_outlier(rr_interval, next_rr_interval, method="Malik", custom_rule=None):
     if method == "Malik":
         return abs(rr_interval - next_rr_interval) <= 0.2 * rr_interval
     elif method == "Kamath":
-        return 0 <= (next_rr_interval - rr_interval) <= 0.325 * rr_interval or 0 <= (
-                    rr_interval - next_rr_interval) <= 0.245 * rr_interval
+        return 0 <= (next_rr_interval - rr_interval) <= 0.325 * rr_interval or 0 <= (rr_interval - next_rr_interval) \
+               <= 0.245 * rr_interval
     elif method == "custom":
         return abs(rr_interval - next_rr_interval) <= custom_rule * rr_interval
     else:
         raise ValueError("Not a valid method. Please choose Malik or Kamath")
 
 
-def test_sample(nn_intervals, outlier_count):
-    if outlier_count / len(nn_intervals) > 0.2:
+def test_sample(nn_intervals, outlier_count, removing_rule):
+    """
+    TO DO
+    :param nn_intervals:
+    :param outlier_count:
+    :param removing_rule:
+    :return:
+    """
+    if outlier_count / len(nn_intervals) > removing_rule:
         print("Too much outlier for analyses ! You should descard the sample")
     if len(nn_intervals) < 240:
         print("Not enough Heart beat for Nyquist criteria ! ")
