@@ -285,7 +285,7 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     Arguments
     ---------
     nn_intervals - list of Normal to Normal Interval
-    method - Method used to calculate the psd. Choice are Welch's, lomb and Fourier's method.
+    method - Method used to calculate the psd. Choice are Welch's FFT or Lomb method.
     sampling_frequency - frequence at which the signal is sampled. Common value range from 
     1 Hz to 10 Hz, by default set to 7 Hz. No need to specify if Lomb method is used.
     interpolation_method - kind of interpolation as a string, by default "linear". No need to 
@@ -320,8 +320,6 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     elif method == "Lomb":
         freq, psd = LombScargle(timestamps, nn_intervals, normalization='psd').autopower(minimum_frequency=vlf_band[0],
                                                                                          maximum_frequency=hf_band[1])
-    elif method == "Fourier":
-        freq, psd = fourier_periodogram(timestamps, nn_intervals)
     else:
         raise ValueError("Not a valid method. Choose between 'Lomb' and 'Welch'")
         
@@ -376,29 +374,6 @@ def create_interpolation_time(nn_intervals, sampling_frequency=7):
     # Create timestamp for interpolation
     nni_interpolation_tmstp = np.arange(0, time_nni[-1], 1 / float(sampling_frequency))
     return nni_interpolation_tmstp
-
-
-def fourier_periodogram(tmstp, nn_intervals):
-    """
-    Function computing the fast fourier transform
-    
-    Arguments
-    ---------
-    nn_intervals - list of Normal to Normal Interval
-    tmstp - timestamp of the signal
-
-    Returns
-    ---------
-    psd - Power Spectral Density of the signal
-    freq - Array of sample frequencies
-    """
-    n = len(tmstp)
-    # Return the Discrete Fourier Transform sample frequencies
-    frequency = np.fft.fftfreq(n, tmstp[1] - tmstp[0])
-    # Compute the one-dimensional discrete Fourier Transform
-    y_fft = np.fft.fft(nn_intervals)
-    positive = (frequency > 0)
-    return frequency[positive], (1. / n) * abs(y_fft[positive]) ** 2
 
 
 def get_features_from_psd(freq, psd, vlf_band=(0.003, 0.04), lf_band=(0.04, 0.15), hf_band=(0.15, 0.40),
