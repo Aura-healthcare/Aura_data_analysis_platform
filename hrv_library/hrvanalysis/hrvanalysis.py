@@ -275,8 +275,7 @@ def get_time_domain_features(nn_intervals):
 # ----------------- FREQUENCY DOMAIN FEATURES ----------------- #
 
 def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequency=7, interpolation_method="linear",
-                                  vlf_band=(0.0033, 0.04), lf_band=(0.04, 0.15), hf_band=(0.15, 0.40),
-                                  ulf_band=(0, 0.003), plot=0):
+                                  vlf_band=(0.0033, 0.04), lf_band=(0.04, 0.15), hf_band=(0.15, 0.40), plot=0):
     
     """
     Function returning a dictionnary containing frequency domain features for HRV analyses.
@@ -293,7 +292,6 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     vlf_band - Very low frequency band for features extraction from power spectral density
     lf_band - Low frequency band for features extraction from power spectral density
     hf_band - High frequency band for features extraction from power spectral density
-    ulf_band - Ultra low frequency band for features extraction from power spectral density
 
     Returns
     ---------
@@ -327,8 +325,7 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     freqency_domain_features = get_features_from_psd(freq=freq, psd=psd,
                                                      vlf_band=vlf_band,
                                                      lf_band=lf_band,
-                                                     hf_band=hf_band,
-                                                     ulf_band=ulf_band)
+                                                     hf_band=hf_band)
     
     # TO DO 
     # Plotting options
@@ -376,8 +373,7 @@ def create_interpolation_time(nn_intervals, sampling_frequency=7):
     return nni_interpolation_tmstp
 
 
-def get_features_from_psd(freq, psd, vlf_band=(0.003, 0.04), lf_band=(0.04, 0.15), hf_band=(0.15, 0.40),
-                          ulf_band=(0, 0.003)):
+def get_features_from_psd(freq, psd, vlf_band=(0, 0.04), lf_band=(0.04, 0.15), hf_band=(0.15, 0.40)):
     """
     Function computing frequency domain features from the power spectral decomposition.
     
@@ -429,7 +425,6 @@ def get_features_from_psd(freq, psd, vlf_band=(0.003, 0.04), lf_band=(0.04, 0.15
     vlf_indexes = np.logical_and(freq >= vlf_band[0], freq < vlf_band[1])
     lf_indexes = np.logical_and(freq >= lf_band[0], freq < lf_band[1])
     hf_indexes = np.logical_and(freq >= hf_band[0], freq < hf_band[1])
-    ulf_indexes = np.logical_and(freq >= ulf_band[0], freq < ulf_band[1])
 
     # STANDARDS
 
@@ -445,9 +440,6 @@ def get_features_from_psd(freq, psd, vlf_band=(0.003, 0.04), lf_band=(0.04, 0.15
     lfnu = (lf / (lf + hf)) * 100
     hfnu = (hf / (lf + hf)) * 100
 
-    # Feature non calculable pour "short term recordings"
-    ulf = np.trapz(y=psd[ulf_indexes], x=freq[ulf_indexes])
-
     # Feature(s) trouvée(s) sur les codes github et non dans la doc
     # lf_P_ratio = lf / total_power
     # hf_P_ratio = hf/ total_power
@@ -459,8 +451,7 @@ def get_features_from_psd(freq, psd, vlf_band=(0.003, 0.04), lf_band=(0.04, 0.15
         'lfnu': lfnu,
         'hfnu': hfnu,
         'total_power': total_power,
-        'vlf': vlf,
-        'ulf': ulf,
+        'vlf': vlf
         # 'lf_P_ratio' : lf_P_ratio,
         # 'hf_P_ratio' : hf_P_ratio
     }
