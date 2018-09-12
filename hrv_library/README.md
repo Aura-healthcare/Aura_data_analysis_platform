@@ -1,8 +1,8 @@
-# Heart Rate Variability analysis Library
+# Heart Rate Variability analysis library
 
-"hrvanalysis" is a Python module for Heart Rate Variability Analysis built on top of SciPy, AstroPy, Nolds and NumPy and distributed under the GPLv3 license.
+**hrvanalysis** is a Python module for Heart Rate Variability Analysis built on top of SciPy, AstroPy, Nolds and NumPy and distributed under the GPLv3 license.
 
-The project started in July 2018 as part of Aura Healthcare project and is maintained by Robin Champseix.
+The development of this library started in July 2018 as part of Aura Healthcare project and is maintained by Robin Champseix.
 
 Website : https://www.aura.healthcare/
 
@@ -69,6 +69,11 @@ You can find details and references about each feature in the documentation of e
 - get_poincare_plot_features
 - get_sampen
 
+## References
+
+Here are the main references used to compute the set of features:
+- 
+- 
 
 ## Authors
 
@@ -76,9 +81,9 @@ You can find details and references about each feature in the documentation of e
 
 ## License
 
-This project is licensed under the *GNU GENERAL PUBLIC License* - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the *GNU GENERAL PUBLIC License* - see the [LICENSE.md](https://github.com/robinchampseix/hrv_library/LICENSE) file for details
 
 ## Acknowledgments
 
 * I hereby thank Laurent Ribière and Clément Le Couedic, my coworkers who gave me time to Open Source this library.
-* I also thank Fabien Arcellier for his precious advices on to how build a library in PyPi.
+* I also thank Fabien Arcellier for his advices on to how build a library in PyPi.
