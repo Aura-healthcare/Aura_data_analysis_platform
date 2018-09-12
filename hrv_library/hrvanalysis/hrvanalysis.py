@@ -26,7 +26,7 @@ def clean_outlier(rr_intervals, low_rri=300, high_rri=2000):
 
     """
 
-    # Conversion RrInterval / Heart rate ==> rri (ms) =  1000 / (bpm / 60)
+    # Conversion RrInterval to Heart rate ==> rri (ms) =  1000 / (bpm / 60)
     # rri 2000 => bpm 30 / rri 300 => bpm 200
     rr_intervals_cleaned = [x if high_rri >= x >= low_rri else np.nan for x in rr_intervals]
     nan_count = sum(np.isnan(rr_intervals_cleaned))
@@ -159,7 +159,7 @@ def is_valid_sample(nn_intervals, outlier_count, removing_rule=0.04):
     """
     if outlier_count / len(nn_intervals) > removing_rule:
         print("Too much outlier for analyses ! You should descard the sample")
-        return  False
+        return False
     if len(nn_intervals) < 240:
         print("Not enough Heart beat for Nyquist criteria ! ")
         return False
@@ -231,7 +231,6 @@ def get_time_domain_features(nn_intervals):
     length_int = len(nn_intervals)
     
     mean_nni = np.mean(nn_intervals)
-    sdnn = np.std(nn_intervals, ddof=1)  # ddof = 1 : estimateur non biaisé => divise std par n-1
     sdsd = np.std(diff_nni)
     rmssd = np.sqrt(np.mean(diff_nni ** 2))
     median_nni = np.median(nn_intervals)
@@ -243,12 +242,12 @@ def get_time_domain_features(nn_intervals):
     
     range_nni = max(nn_intervals) - min(nn_intervals)
     
-    # Feature(s) trouvée(s) sur les codes github et non dans la doc
-    # cvsd = RMMSD / mean_nni
+    # Feature found on github et non in documentation
+    cvsd = rmssd / mean_nni
     
-    # Features non calculables pour short term recordings
-    # sdnn équivaut à SDANN sur 24h et non sur une fenêtre temporelle
-    # cvNN = sdnn / mean_nni # Necissite cycle 24h
+    # Features only for long term recordings
+    sdnn = np.std(nn_intervals, ddof=1)  # ddof = 1 : unbiased estimator => divide std by n-1
+    cvnn = sdnn / mean_nni
     
     time_domain_features = {
         'mean_nni': mean_nni, 
@@ -260,11 +259,9 @@ def get_time_domain_features(nn_intervals):
         'pnni_20': pnni_20,
         'rmssd': rmssd,
         'median_nni': median_nni,
-        'range_nni': range_nni
-        # ,'cvsd': cvsd,
-        # 'sdnn': sdnn,
-        # 'cvNN': cvNN
-        
+        'range_nni': range_nni,
+        'cvsd': cvsd,
+        'cvnn': cvnn
     }
     
     return time_domain_features
@@ -301,7 +298,7 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     """
     timestamps = create_time_info(nn_intervals)
 
-    # ---------- Interpolation du signal ---------- #
+    # ---------- Interpolation of signal ---------- #
     if method == "Welch":
         funct = interpolate.interp1d(x=timestamps, y=nn_intervals, kind=interpolation_method)
 
@@ -311,7 +308,7 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
         # ---------- Remove DC Component ---------- #
         nni_normalized = nni_interpolation - np.mean(nni_interpolation)
     
-    #  ----------  Calcul psd  ---------- #
+    #  ----------  Calcul Power Spectral Density  ---------- #
     # Describes the distribution of power into frequency components composing that signal.
         freq, psd = signal.welch(x=nni_normalized, fs=sampling_frequency, window='hann')
     
@@ -321,7 +318,7 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
     else:
         raise ValueError("Not a valid method. Choose between 'Lomb' and 'Welch'")
         
-    # ----------  Calcul des features  ---------- #
+    # ----------  Calcul features  ---------- #
     freqency_domain_features = get_features_from_psd(freq=freq, psd=psd,
                                                      vlf_band=vlf_band,
                                                      lf_band=lf_band,
@@ -421,7 +418,7 @@ def get_features_from_psd(freq, psd, vlf_band=(0, 0.04), lf_band=(0.04, 0.15), h
 
     """
     
-    # Calcul des indices selon les bandes de fréquences souhaitées
+    # Calcul of indices between desired frequency bands
     vlf_indexes = np.logical_and(freq >= vlf_band[0], freq < vlf_band[1])
     lf_indexes = np.logical_and(freq >= lf_band[0], freq < lf_band[1])
     hf_indexes = np.logical_and(freq >= hf_band[0], freq < hf_band[1])
@@ -432,17 +429,13 @@ def get_features_from_psd(freq, psd, vlf_band=(0, 0.04), lf_band=(0.04, 0.15), h
     lf = np.trapz(y=psd[lf_indexes], x=freq[lf_indexes])
     hf = np.trapz(y=psd[hf_indexes], x=freq[hf_indexes])
 
-    # total power & vlf : Feature utilisée plus souvent dans les analyses "long term recordings"
+    # total power & vlf : Feature often used for  "long term recordings" analysis
     vlf = np.trapz(y=psd[vlf_indexes], x=freq[vlf_indexes])
     total_power = vlf + lf + hf
 
     lf_hr_ratio = lf / hf
     lfnu = (lf / (lf + hf)) * 100
     hfnu = (hf / (lf + hf)) * 100
-
-    # Feature(s) trouvée(s) sur les codes github et non dans la doc
-    # lf_P_ratio = lf / total_power
-    # hf_P_ratio = hf/ total_power
 
     freqency_domain_features = {
         'lf': lf,
@@ -452,8 +445,6 @@ def get_features_from_psd(freq, psd, vlf_band=(0, 0.04), lf_band=(0.04, 0.15), h
         'hfnu': hfnu,
         'total_power': total_power,
         'vlf': vlf
-        # 'lf_P_ratio' : lf_P_ratio,
-        # 'hf_P_ratio' : hf_P_ratio
     }
     
     return freqency_domain_features
@@ -470,7 +461,7 @@ def get_csi_cvi_features(nn_intervals):
 
     Arguments
     ---------
-    nn_intervals - list of Normal to Normal Interval
+    nn_intervals - list of Normal to Normal Intervals
 
     Returns
     ---------
