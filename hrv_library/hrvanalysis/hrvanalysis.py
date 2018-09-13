@@ -292,7 +292,7 @@ def get_frequency_domain_features(nn_intervals, method="Welch", sampling_frequen
 
     Returns
     ---------
-    freqency_domain_features - dictionnary containing frequency domain features for HRV analyses.
+    frequency_domain_features - dictionnary containing frequency domain features for HRV analyses.
     There are details about each features given in "get_features_from_psd" function.
 
     """
