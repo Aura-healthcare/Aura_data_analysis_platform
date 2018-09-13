@@ -8,3 +8,4 @@ query/credentials.cfg
 **/.DS_Store
 hrv_library/dist/
 hrv_library/hrvanalysis.egg-info/
+hrv_library/build/
