@@ -1,4 +1,4 @@
-# Heart Rate Variability analysis library
+# Heart Rate Variability analysis
 
 **hrvanalysis** is a Python module for Heart Rate Variability Analysis built on top of SciPy, AstroPy, Nolds and NumPy and distributed under the GPLv3 license.
 
@@ -50,8 +50,7 @@ As an exemple, what you can compute to get Time domain analysis is :
 from hrvanalysis import get_time_domain_features
 nn_intervals = 
 time_domain_features = get_time_domain_features(nn_intervals)
-print(time_domain_features)
-
+>>> time_domain_features
 {'mean_nn': 718.248,
  'sdnn': 43.113074968427306,
  'sdsd': 19.519367520775713,
@@ -74,12 +73,11 @@ You can find details and references about each feature in the documentation of e
 ## References
 
 Here are the main references used to compute the set of features:
-- 
-- 
+
 
 ## Authors
 
-* **Robin Champseix** - *Initial work* - (https://github.com/robinchampseix)
+**Robin Champseix** - *Initial work* - (https://github.com/robinchampseix)
 
 ## License
 
@@ -87,5 +85,5 @@ This project is licensed under the *GNU GENERAL PUBLIC License* - see the [LICEN
 
 ## Acknowledgments
 
-* I hereby thank Laurent Ribière and Clément Le Couedic, my coworkers who gave me time to Open Source this library.
-* I also thank Fabien Arcellier for his advices on to how build a library in PyPi.
+I hereby thank Laurent Ribière and Clément Le Couedic, my coworkers who gave me time to Open Source this library.
+I also thank Fabien Arcellier for his advices on to how build a library in PyPi.
