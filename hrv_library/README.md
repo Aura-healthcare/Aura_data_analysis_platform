@@ -38,11 +38,11 @@ you can also clone the repository:
 
 There are 3 types of features you can get from NN Intervals: 
 
-> Time domain features 
+> Time domain features : **Mean_NN, SDNN, SDSD, NN50, pNN50, NN20, pNN20, RMSSD, Median_NN, Range_NN**
 
-> Frequency domain features
+> Frequency domain features : **LF, HF, VLF, LH/HF ratio, LFnu, HFnu, Total_Power**
 
-> Non Linear domain features
+> Non Linear domain features : **CSI, CVI, Modified_CSI, SD1, SD2, SD1/SD2 ratio, SampEn**
 
 As an exemple, what you can compute to get Time domain analysis is :
 
