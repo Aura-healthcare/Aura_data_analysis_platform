@@ -63,7 +63,7 @@ time_domain_features = get_time_domain_features(nn_intervals)
  'Range_nn': 249}
 ```
 
-You can find details and references about each feature in the documentation of each function:
+You can find how to use methods, references and details about each feature in the documentation of each function:
 - get_time_domain_features
 - get_frequency_domain_features
 - get_csi_cvi_features
