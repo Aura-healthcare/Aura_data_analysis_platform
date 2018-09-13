@@ -1,9 +1,0 @@
-README.md
-setup.py
-hrvanalysis/TestsToPass.py
-hrvanalysis/__init__.py
-hrvanalysis/hrvanalysis.py
-hrvanalysis.egg-info/PKG-INFO
-hrvanalysis.egg-info/SOURCES.txt
-hrvanalysis.egg-info/dependency_links.txt
-hrvanalysis.egg-info/top_level.txt
